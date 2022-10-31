@@ -1,0 +1,47 @@
+!pip install -q transformers
+!pip install -q youtube_transcript_api
+from transformers import pipeline
+from youtube_transcript_api import YouTubeTranscriptApi
+summarizer = pipeline('summarization')
+def youtube_list(youtube_video_list):
+  res = []
+  for youtube_video in youtube_video_list:
+    print(youtube_video)
+    res.append(youtube_transcript(youtube_video))
+  return res
+  def youtube_transcript(youtube_video):
+  video_id = youtube_video.split("=")[1]  #getting the video id
+  #YouTubeTranscriptApi.get_transcript(video_id)
+  transcript = YouTubeTranscriptApi.get_transcript(video_id)
+  if (transcript):
+  #Extracting only the text field data from the transcript object
+    result = ""
+    for i in transcript:
+        result += ' ' + i['text']
+    #print(result)
+    print("Length of the transcript " + str(len(result)))
+
+    #summarize the data by considering 1000 lines.
+    num_iters = int(len(result)/1000)
+    summarized_text = []
+    for i in range(0, num_iters + 1):
+      start = 0
+      start = i * 1000
+      end = (i + 1) * 1000
+      out = summarizer(result[start:end])
+      out = out[0]  
+      out = out['summary_text']
+      summarized_text.append(out)   
+    summarized_text = str(summarized_text)
+    print("The summarized transcript is " + summarized_text[2:-2] + "\n")
+    print("The length of summarized text is " + str(len(summarized_text)) + "\n")
+    #Write summarized data to a text file
+    
+    with open("test.txt", "a") as myfile:
+      myfile.write(summarized_text + "\n")  
+    return {"link":youtube_video, "prev_length": str(len(result)),"length":str(len(summarized_text)), "text":summarized_text[2:-2]}
+  else:
+    print("No transcript available for this video_id" + video_id + " Hence cant summarize..")
+Your_Video_List = [
+            "https://www.youtube.com/watch?v=d_lcKLsIu0g"]
+youtube_list(Your_Video_List)
